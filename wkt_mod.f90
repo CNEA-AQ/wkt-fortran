@@ -3,7 +3,7 @@ module wkt
   !Subrutina que lee "wkt string" devuelve tipo (point, line, poly, etc.)
   ! y array con coordenadas xy(n,2)
   !
-  ! uso:  call parse_wkt(string, xy, type)
+  ! uso:  call parse_wkt(string, type, xy)
   implicit none
 
 contains
@@ -18,9 +18,9 @@ subroutine parse_wkt(wkt_str, typ, xy)
    integer            :: op,cp,sep                                      !position of "open"/"close" parentesis, and coordinate separator
    integer            :: n,m,nbp                                        !# of coordinates in a feature, # of features, # of boundary parenthesis
    integer            :: i!,j,k
-   character(len=500) :: str                                            ! total      string buffer
-   character(len=400) :: fstr                                           ! feature    string buffer
-   character(len=100) :: xystr                                          ! coordinate string buffer
+   character(len=900) :: str                                            ! total      string buffer
+   character(len=880) :: fstr                                           ! feature    string buffer
+   character(len=50)  :: xystr                                          ! coordinate string buffer
 
    op = index(wkt_str,"("            )                                  !begin coordinates  <TYPE> ( <COORDINATES> )
    cp = index(wkt_str,")",back=.true.)                                  !  end coordinates  <TYPE> ( <COORDINATES> )
@@ -53,20 +53,19 @@ subroutine parse_wkt(wkt_str, typ, xy)
    end if
 
    !DO i=1,m                                                            !for each feature
-
    n=count( [ ( fstr(i:i) == ',',i=1, len(fstr) ) ] ) + 1               !get # of points on feature
    if ( allocated(xy) ) deallocate(xy); allocate(xy(n,2))               !allocate coordinates array
-   !print*,"fstr=",fstr    !debug 
-   !print*,"n=",n          !debug 
+   print*,"fstr=",fstr    !debug 
+   print*,"n=",n          !debug 
    do i=1, n                                                            !for each point
    if ( n > 1 .and. i < n ) then                                        ! if more than 1 point, and point not the last one
          sep=index(fstr,',')                                            !get location of separator ","
-         xystr=trim(fstr(1:sep))                                        !take "x y" point coordinates
+         xystr=trim(adjustl(fstr(1:sep)))                                        !take "x y" point coordinates
          fstr(1:sep)=''                                                 !remove this point from feature string to keep reading
       else
-         xystr=trim(fstr)                                               !for points or last coordinate
+         xystr=trim(adjustl(fstr))                                               !for points or last coordinate
       end if
-      !print*,xystr        !debug
+      print*,xystr        !debug
       read(xystr,*) xy(i,:)                                             !transfer xy to out array
    enddo!points
    !ENDDO!features
